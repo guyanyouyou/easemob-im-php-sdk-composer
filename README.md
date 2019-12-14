@@ -19,3 +19,6 @@ composer require sinkcup/easemob-im
 ```
 phpunit tests/
 ```
+
+##todo
+需要进一步完善聊天室功能
