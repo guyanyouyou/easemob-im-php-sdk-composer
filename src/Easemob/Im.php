@@ -203,4 +203,260 @@ class Im
         }
         throw new Exception($r, $code);
     }
+
+
+    /**
+     * 创建聊天室
+     *
+     * @param        $room_name
+     * @param        $owner_name
+     * @param string $room_description
+     * @param int    $max_user
+     * @param array  $member_users
+     *
+     * @return mixed
+     */
+    public function createRoom($room_name, $owner_name, $room_description = "描述", $max_user = 200, $member_users = [])
+    {
+        $data = [];
+        if (!empty($room_name)) {
+            $data['name'] = $room_name;
+        }
+        if (!empty($owner_name)) {
+            $data['owner'] = $owner_name;
+        }
+        if (!empty($room_description)) {
+            $data['description'] = $room_description;
+        }
+        if (!empty($max_user)) {
+            $data['maxusers'] = $max_user;
+        }
+        if (!empty($member_users)) {
+            $data['members'] = $member_users;
+        }
+        print_r($data);
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $this->conf['api_of_app'] . '/chatrooms',
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HEADER => false,
+            CURLOPT_RETURNTRANSFER => true,
+        );
+        $options[CURLOPT_HTTPHEADER][] = 'Authorization: Bearer ' . $this->conf['access_token'];
+        curl_setopt_array($ch, $options);
+
+        $r = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code == 200) {
+            return json_decode($r, true);
+        }
+        throw new Exception($r, $code);
+    }
+
+    /**
+     * 修改聊天室信息
+     *
+     * @param string $group_id
+     * @param string $group_name
+     * @param string $group_description
+     * @param int    $max_user
+     *
+     * @return mixed
+     * @throws EasemobError
+     */
+    public function editRoom($room_id, $room_name = "", $room_description = "", $max_user = 0)
+    {
+        $data = [];
+        if (!empty($room_name)) {
+            $data['name'] = $room_name;
+        }
+        if (!empty($room_description)) {
+            $data['description'] = $room_description;
+        }
+        if (!empty($max_user)) {
+            $data['maxusers'] = $max_user;
+        }
+        print_r($data);
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $this->conf['api_of_app'] . '/chatrooms/'.$room_id,
+            //CURLOPT_PUT => true,
+            CURLOPT_CUSTOMREQUEST=>'PUT',
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HEADER => false,
+            CURLOPT_RETURNTRANSFER => true,
+        );
+        $options[CURLOPT_HTTPHEADER][] = 'Authorization: Bearer ' . $this->conf['access_token'];
+        curl_setopt_array($ch, $options);
+        $r = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code == 200) {
+            return json_decode($r, true);
+        }
+        throw new Exception($r, $code);
+    }
+
+     /**
+     * 删除聊天室
+     *
+     * @param $room_id
+     *
+     * @return mixed
+     */
+    public function delRoom($room_id)
+    {
+
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $this->conf['api_of_app'] . '/chatrooms/'.$room_id,
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_HEADER => false,
+            CURLOPT_RETURNTRANSFER => true,
+        );
+        $options[CURLOPT_HTTPHEADER][] = 'Authorization: Bearer ' . $this->conf['access_token'];
+        curl_setopt_array($ch, $options);
+        $r = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code == 200) {
+            return json_decode($r, true);
+        }
+        throw new Exception($r, $code);
+    }
+
+    /**
+     * 查询聊天室
+     *
+     * @param $room_id
+     *
+     * @return mixed
+     */
+    public function getRoom($room_id)
+    {
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $this->conf['api_of_app'] . '/chatrooms/'.$room_id,
+            CURLOPT_HEADER => false,
+            CURLOPT_RETURNTRANSFER => true,
+        );
+        $options[CURLOPT_HTTPHEADER][] = 'Authorization: Bearer ' . $this->conf['access_token'];
+        curl_setopt_array($ch, $options);
+        $r = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code == 200) {
+            return json_decode($r, true);
+        }
+        throw new Exception($r, $code);
+    }
+
+    /**
+     * 获取用户所有参加的聊天室
+     *
+     * @param $user
+     *
+     * @return mixed
+     */
+    public function userToRooms($username)
+    {
+
+
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $this->conf['api_of_app'] . '/users/'.$username.'/joined_chatrooms',
+            CURLOPT_HEADER => false,
+            CURLOPT_RETURNTRANSFER => true,
+        );
+
+        $options[CURLOPT_HTTPHEADER][] = 'Authorization: Bearer ' . $this->conf['access_token'];
+        curl_setopt_array($ch, $options);
+        $r = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code == 200) {
+            return json_decode($r, true);
+        }
+        throw new Exception($r, $code);
+    }
+
+
+    /**
+     * 聊天室添加成员——批量
+     *
+     * @param string $room_id
+     * @param array $users
+     *
+     * @return mixed
+     */
+    public function roomAddUsers($room_id, $users)
+    {
+        $data = [
+            'usernames' => $users,
+        ];
+
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $this->conf['api_of_app'] . 'chatrooms/'.$room_id.'/users',
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HEADER => false,
+            CURLOPT_RETURNTRANSFER => true,
+        );
+        if (!empty($this->conf['access_token'])) {
+            $options[CURLOPT_HTTPHEADER][] = 'Authorization: Bearer ' . $this->conf['access_token'];
+        }
+        curl_setopt_array($ch, $options);
+        $r = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code == 200) {
+            return json_decode($r, true);
+        }
+        throw new Exception($r, $code);
+    }
+
+
+    /**
+     * 聊天室删除成员——批量
+     *
+     * @param string $room_id
+     * @param array $users
+     *
+     * @return mixed
+     */
+    public function roomDelUsers($room_id, $users)
+    {
+        $data = [
+            'usernames' => $users,
+        ];
+
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $this->conf['api_of_app'] . 'chatrooms/'.$room_id.'/users/'.implode(',', $users),
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_HEADER => false,
+            CURLOPT_RETURNTRANSFER => true,
+        );
+
+
+        if (!empty($this->conf['access_token'])) {
+            $options[CURLOPT_HTTPHEADER][] = 'Authorization: Bearer ' . $this->conf['access_token'];
+        }
+        curl_setopt_array($ch, $options);
+        $r = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code == 200) {
+            return json_decode($r, true);
+        }
+        throw new Exception($r, $code);
+    }
+
 }
